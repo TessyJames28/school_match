@@ -73,10 +73,14 @@ class UserUpdate(generics.UpdateAPIView):
     
     
 class FavoriteView(generics.ListCreateAPIView):
-    serializer_class = FavoritePostSerializer
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]
-    
+    def get_serializer_class(self):
+        if self.request.method == 'GET':
+            return FavoriteSerializer
+        else:
+            return FavoritePostSerializer
+
     def get_queryset(self):
         user_id = self.request.user.id
         return Favorite.objects.filter(user_id=user_id)

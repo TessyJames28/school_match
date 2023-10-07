@@ -1,73 +1,93 @@
-import { FavoriteBorder } from '@mui/icons-material'
 import { Box, Card, CardMedia, IconButton, Stack, Typography } from '@mui/material'
-import React from 'react'
-import { useNavigate } from 'react-router-dom'
+import React, { useEffect, useState } from 'react'
+import { deleteFavorite, getFavorites } from '../api/client'
+import Footer from '../components/Footer'
+import Loading from '../components/Loading'
 import NavBar from '../components/NavBar'
+import { Delete } from '@mui/icons-material'
+import { useSelector } from 'react-redux'
 
 const Favorite = () => {
-	const navbg = '#002e29'
-	const fakeObj = {
-		name: "Abia State University, Uturu",
-		description: "Lorem ipsum dolor, sit amet consectetur adipisicing elit. Laborum reprehenderit natus minus est reiciendis veritatis enim nam sed quis officia accusantium nemo quibusdam, voluptates quae laudantium quam eius exercitationem cum autem cumque perferendis adipisci doloremque. Animi accusantium numquam optio at sequi doloremque consectetur praesentium vel provident! Eaque obcaecati dolorum similique!",
-		degree: "animal and environmental science",
-		grade: "Second class Upper",
-		url: "#",
-		img: "/exp.png"
-	}
+	const user = useSelector(state => state.app.user)
+	const [favorites, setFavorites] = useState([])
+	const [loading, setLoading] = useState(true)
 
-	const school = Array(3).fill(fakeObj)
+	useEffect(() => {
+		let favorites = getFavorites().then(res => {
+			return res
+		})
+		favorites = favorites.then(res => {
 
-	const navigate = useNavigate()
+			if (res.data) {
+				setFavorites(res.data.results)
+				setLoading(false)
+			}
+		})
+	}, [favorites])
+
 	return (
 		<>
+			{
+				loading ? <Loading /> :
+					<Box minHeight='100vh' width='100vw' bgcolor='teal' sx={{ display: 'flex', flexDirection: 'column' }}>
+						{/* Nav Bar */}
+						<NavBar options={['home', 'profile', 'favorites', 'search', 'logout']} />
 
-			<Box minHeight='100vh' width='100vw' bgcolor='teal'>
-				{/* Nav Bar */}
-				<NavBar options={['home', 'profile', 'favorites', 'search', 'logout']} />
-
-				<Stack>
-					<Stack>
-						<Typography marginLeft={10} fontWeight={700} fontSize={'2rem'} marginTop='90px'>
-							Your Favorites
-						</Typography>
-					</Stack>
-					<Stack>
-						{school.map(({ description, grade, url, img, name, degree }, i) => <Stack key={i} direction={'row'} spacing={3} sx={{ mx: 10, my: 3 }}>
-							<Stack sx={{ zIndex: 1 }}>
-								<Card >
-									<CardMedia
-										sx={{ objectFit: 'cover', width: '20rem', margin: '0px', background: 'grey', zIndex: '-99' }}
-										component='img'
-										height='300px'
-										alt="media banner"
-										loading='lazy'
-										src={img}
-
-									/>
-								</Card>
+						<Stack margin={'auto'} flex={1}>
+							<Stack>
+								<Typography marginLeft={10} fontWeight={700} fontSize={'2rem'} marginTop='5px'>
+									Your Favorites
+								</Typography>
 							</Stack>
-							<Stack spacing={1}>
-								<Typography fontWeight={600}>{name}</Typography>
-								<Typography>{description}</Typography>
-								<Typography><b>Degree:</b> {degree}</Typography>
-								<Typography><b>Grade:</b> {grade}</Typography>
-								<Typography><a href={url}>Visit Us</a></Typography>
-								<IconButton sx={{
-									'&:hover': {
-										background: 'transparent'
-									},
-									width: "10px"
+							<Stack>
+								{favorites.map((v, i) => <Stack key={i} direction={'row'} spacing={3} sx={{ mx: 10, my: 3 }}>
+									<Stack sx={{ zIndex: 1 }}>
+										<Card >
+											<CardMedia
+												sx={{ objectFit: 'cover', width: '20rem', margin: '0px', background: 'grey', zIndex: '-99' }}
+												component='img'
+												height='300px'
+												alt="media banner"
+												loading='lazy'
+												src={'/exp.png'}
+											/>
+										</Card>
+									</Stack>
+									<Stack spacing={1}>
+										<Typography fontWeight={600}>{v.department.school.name}</Typography>
+										<Typography>{v.department.program.program_detail}</Typography>
+										<Typography><b>Degree:</b> {v.department.degree.title}</Typography>
+										<Typography><b>Grade:</b> {v.department.grade.grade}</Typography>
+										<Typography><a href={v.department.school.school_link}>Visit Us</a></Typography>
+										<IconButton onClick={async () => {
+											await deleteFavorite(v.id, user.id)
+											let fave = await getFavorites()
+											if (fave.data.results) {
+												setFavorites(fave.data.results)
+											}
+											// todo
 
-								}}>
-									<FavoriteBorder />
-								</IconButton>
+										}}
+											sx={{
+												'&:hover': {
+													background: 'transparent'
+												},
+												width: "10px"
+
+											}}
+										>
+											<Delete />
+										</IconButton>
+									</Stack>
+								</Stack>)}
 							</Stack>
-						</Stack>)}
-					</Stack>
 
-				</Stack>
+						</Stack>
 
-			</Box>
+						<Footer />
+
+					</Box>
+			}
 		</>
 	)
 }

@@ -1,15 +1,19 @@
 import { Box, Button, Stack, TextField, Typography } from '@mui/material'
-import React, { useState } from 'react'
-import NavBar from '../components/NavBar'
-import { signInUser } from '../api/client'
-import { useNavigate } from 'react-router-dom'
 import Cookie from 'js-cookie'
+import React, { useState } from 'react'
+import { useDispatch } from 'react-redux'
+import { useNavigate } from 'react-router-dom'
+import { signInUser } from '../api/client'
+import NavBar from '../components/NavBar'
+import { setUserData } from '../redux/AppSlice'
+import Footer from '../components/Footer'
 
 const Login = () => {
 	const navbg = '#002e29'
 	const type = "Login"
 	const submitText = "Sign in"
 
+	const dispatch = useDispatch()
 	const [username, setUsername] = useState("")
 	const [password, setPassword] = useState("")
 	const navigate = useNavigate()
@@ -19,12 +23,12 @@ const Login = () => {
 		let user_data = signInUser({ username, password }).then(res => res)
 		user_data = user_data.then((res) => {
 			if (res.error) {
-				console.log(res.error)
 				alert(res.error)
 			}
 			else {
 				Cookie.set('token', res.token)
-				navigate('/dashboard')
+				dispatch(setUserData(res.data))
+				navigate('/dashboard', { replace: true })
 			}
 		})
 	}
@@ -90,7 +94,7 @@ const Login = () => {
 
 					</Stack>
 				</Box>
-
+				<Footer />
 			</Box>
 		</>
 	)

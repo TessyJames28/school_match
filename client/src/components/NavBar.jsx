@@ -40,7 +40,6 @@ const NavBar = ({ options }) => {
 										</Button>
 									}
 								} else {
-									console.log(options)
 									return <Button key={i} onClick={() => { navigate(v.link) }}>
 										<Typography color="white" fontSize='1.5rem'>
 											{v.name}

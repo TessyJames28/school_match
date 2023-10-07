@@ -1,74 +1,77 @@
-import { FavoriteBorder } from '@mui/icons-material'
-import { Box, Card, CardMedia, IconButton, Stack, Typography } from '@mui/material'
-import React from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Favorite } from '@mui/icons-material'
+import { Box, IconButton, Stack, Typography } from '@mui/material'
+import React, { useEffect, useState } from 'react'
+import { useSelector } from 'react-redux'
+import { Link } from 'react-router-dom'
+import { addToFavorite, searchGeneral } from '../api/client'
 import Footer from '../components/Footer'
+import Loading from '../components/Loading'
 import NavBar from '../components/NavBar'
 
 const LandingDashBoard = () => {
-	const navbg = '#002e29'
-	const fakeObj = {
-		name: "Abia State University, Uturu",
-		description: "Lorem ipsum dolor, sit amet consectetur adipisicing elit. Laborum reprehenderit natus minus est reiciendis veritatis enim nam sed quis officia accusantium nemo quibusdam, voluptates quae laudantium quam eius exercitationem cum autem cumque perferendis adipisci doloremque. Animi accusantium numquam optio at sequi doloremque consectetur praesentium vel provident! Eaque obcaecati dolorum similique!",
-		degree: "animal and environmental science",
-		grade: "Second class Upper",
-		url: "#",
-		img: "/exp.png"
-	}
+	const [schools, setSchools] = useState([])
+	const [loading, setLoading] = useState(true)
+	const [iconColor, setIconColor] = useState('white')
+	const user = useSelector(state => state.app.user)
 
-	const school = Array(3).fill(fakeObj)
+	useEffect(() => {
+		const gen = searchGeneral()
+		gen.then(data => {
+			setLoading(false)
+			setSchools(data)
+		})
+	}, [])
 
-	const navigate = useNavigate()
 	return (
 		<>
+			{loading ? <Loading /> :
+				<Box minHeight='100vh' width='100vw' bgcolor='teal'>
+					{/* Nav Bar */}
+					<NavBar options={['home', 'profile', 'favorites', 'search', 'logout']} />
 
-			<Box minHeight='100vh' width='100vw' bgcolor='teal'>
-				{/* Nav Bar */}
-				<NavBar options={['home', 'profile', 'favorites', 'search', 'logout']} />
+					<Stack sx={{ mx: '20px' }} display={'flex'} >
+						<Typography sx={{ fontWeight: 700, fontSize: '3.5rem' }}>Welcome, {user.username} </Typography>
+						<h3 style={{ textAlign: 'start', fontSize: '5rem', color: 'white', marginTop: '1rem', marginBottom: '5px', fontFamily: 'monospace' }}>Our Schools</h3>
+						{
+							schools.map((v, i) => {
+								return <Stack
+									key={i} display={'flex'} flexDirection={'row'} gap={"2p"} sx={{ my: '5px', width: '80%' }}>
+									<Stack sx={{ mr: '30px' }}>
+										<img src="/exp.png" alt="school image" style={{
+											width: '400px', borderRadius: '2px'
+										}} />
+									</Stack>
+									<Stack>
+										<Typography><b>{v.school.name}, {v.school.country}</b></Typography>
+										<Typography><b>{v.school.type}</b></Typography>
+										<Typography><b>{v.degree.title}</b></Typography>
+										<Typography><b>{v.grade.grade}</b></Typography>
+										<Typography><b>{v.course.name}</b></Typography>
+										<IconButton onClick={async () => {
+											let res = await addToFavorite(user.id, v.id)
+											if (res.data) {
+												alert('Added to favorites')
+												setIconColor('black')
+											}
+										}}
+											sx={{
+												'&:hover': {
+													background: 'transparent'
+												},
+												width: "10px"
 
-				<Stack>
-					<Stack>
-						<Typography marginLeft={10} fontWeight={700} fontSize={'2rem'} marginTop='10px'>
-							Our Schools
-						</Typography>
-					</Stack>
-					<Stack>
-						{school.map(({ description, grade, url, img, name, degree }, i) => <Stack key={i} direction={'row'} spacing={3} sx={{ mx: 10, my: 3 }}>
-							<Stack sx={{ zIndex: 1 }}>
-								<Card >
-									<CardMedia
-										sx={{ objectFit: 'cover', width: '20rem', margin: '0px', background: 'grey', zIndex: '-99' }}
-										component='img'
-										height='300px'
-										alt="media banner"
-										loading='lazy'
-										src={img}
+											}}>
+											<Favorite />
+										</IconButton>
+									</Stack>
 
-									/>
-								</Card>
-							</Stack>
-							<Stack spacing={1}>
-								<Typography fontWeight={600}>{name}</Typography>
-								<Typography>{description}</Typography>
-								<Typography><b>Degree:</b> {degree}</Typography>
-								<Typography><b>Grade:</b> {grade}</Typography>
-								<Typography><a href={url}>Visit Us</a></Typography>
-								<IconButton sx={{
-									'&:hover': {
-										background: 'transparent'
-									},
-									width: "10px"
-
-								}}>
-									<FavoriteBorder />
-								</IconButton>
-							</Stack>
-						</Stack>)}
+								</Stack>
+							})
+						}
 					</Stack>
 					<Footer />
-				</Stack>
-
-			</Box>
+				</Box>
+			}
 		</>
 	)
 }
